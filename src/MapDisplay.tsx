@@ -39,10 +39,11 @@ const MarkerLabels: React.FC<{ folders: MapDisplayProps['folders']; enabled: Map
       window.removeEventListener('resize', updateLabels);
     };
   }, [map, folders, enabled, folderEnabled]);
-  let colorIdx = 0;
+  // Assign a unique color per folder
+  const visibleFolders = folders.filter(f => folderEnabled[f.id]);
   return (
     <div ref={containerRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 500 }}>
-      {folders.filter(f => folderEnabled[f.id]).flatMap(folder =>
+      {visibleFolders.map((folder, folderIdx) =>
         folder.layers.filter(l => enabled[l.id]).flatMap(layer =>
           layer.marks.map((mark, i) => (
             <div
@@ -53,7 +54,7 @@ const MarkerLabels: React.FC<{ folders: MapDisplayProps['folders']; enabled: Map
               style={{
                 position: 'absolute',
                 fontSize: 10,
-                color: getLayerColor(colorIdx),
+                color: getLayerColor(folderIdx),
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 transform: 'translate(-50%, -100%)',
@@ -71,7 +72,8 @@ const MarkerLabels: React.FC<{ folders: MapDisplayProps['folders']; enabled: Map
 };
 
 const MapDisplay: React.FC<MapDisplayProps> = ({ folders, enabled, folderEnabled }) => {
-  let colorIdx = 0;
+  // Assign a unique color per folder
+  const visibleFolders = folders.filter(f => folderEnabled[f.id]);
   return (
     <div style={{ flex: 1, height: '100vh', minWidth: 0, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
@@ -79,14 +81,14 @@ const MapDisplay: React.FC<MapDisplayProps> = ({ folders, enabled, folderEnabled
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {folders.filter(f => folderEnabled[f.id]).flatMap(folder =>
+        {visibleFolders.map((folder, folderIdx) =>
           folder.layers.filter(l => enabled[l.id]).flatMap(layer =>
             layer.marks.map((mark, i) => (
               <Circle
                 key={layer.id + '-' + i}
                 center={[mark.lat, mark.lng]}
                 radius={120}
-                pathOptions={{ color: getLayerColor(colorIdx), fillColor: getLayerColor(colorIdx), fillOpacity: 0.6 }}
+                pathOptions={{ color: getLayerColor(folderIdx), fillColor: getLayerColor(folderIdx), fillOpacity: 0.6 }}
               >
                 <Popup>
                   <b>{mark.name}</b><br />
