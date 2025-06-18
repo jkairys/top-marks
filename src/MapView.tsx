@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useMapFolders } from './context/map-folders';
 import MapMenu from './MapMenu';
 import MapDisplay from './MapDisplay';
+import WindLayerToggle from './WindLayerToggle';
 
 const MapView: React.FC = () => {
   const { folders, removeFolder, removeLayer } = useMapFolders();
   // State for enabled layers and folders
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [folderEnabled, setFolderEnabled] = useState<Record<string, boolean>>({});
+  const [showWind, setShowWind] = useState(true);
 
   // Initialize enabled state for folders and layers
   React.useEffect(() => {
@@ -49,7 +51,12 @@ const MapView: React.FC = () => {
         onRemoveLayer={handleRemoveLayer}
         onRemoveFolder={handleRemoveFolder}
       />
-      <MapDisplay folders={folders} enabled={enabled} folderEnabled={folderEnabled} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 }}>
+        <WindLayerToggle checked={showWind} onChange={setShowWind} />
+        <div style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+          <MapDisplay folders={folders} enabled={enabled} folderEnabled={folderEnabled} showWind={showWind} />
+        </div>
+      </div>
     </div>
   );
 };

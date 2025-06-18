@@ -1,11 +1,15 @@
 import React from 'react';
 import { MapContainer, TileLayer, Circle, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { WMSTileLayer } from 'react-leaflet';
+import L from 'leaflet';
+import { CRS } from 'leaflet';
 
 interface MapDisplayProps {
   folders: Array<{ id: string; name: string; layers: Array<{ id: string; name: string; marks: { name: string; lat: number; lng: number }[] }> }>;
   enabled: Record<string, boolean>;
   folderEnabled: Record<string, boolean>;
+  showWind?: boolean;
 }
 
 const center: [number, number] = [-38.1, 144.8];
@@ -71,16 +75,29 @@ const MarkerLabels: React.FC<{ folders: MapDisplayProps['folders']; enabled: Map
   );
 };
 
-const MapDisplay: React.FC<MapDisplayProps> = ({ folders, enabled, folderEnabled }) => {
+const MapDisplay: React.FC<MapDisplayProps> = ({ folders, enabled, folderEnabled, showWind }) => {
   // Assign a unique color per folder
   const visibleFolders = folders.filter(f => folderEnabled[f.id]);
   return (
     <div style={{ flex: 1, height: '100vh', minWidth: 0, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
       <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         />
+        {showWind && (
+          <WMSTileLayer
+            url="http://localhost:4000/bom-wms/mapcache/meteye"
+            layers="IDZ73069,IDZ73070_swell_small,IDZ73070_swell_big,IDZ73070_swell2_small,IDZ73070_swell2_big"
+            format="image/png"
+            transparent={true}
+            attribution="BOM MetEye"
+            opacity={0.3}
+            version="1.1.1"
+            // params={{ TIMESTEP: '69', BASETIME: '202506180600', ISSUETIME: '20250618064546' }}
+            crs={CRS.EPSG4326}
+          />
+        )}
         {visibleFolders.map((folder, folderIdx) =>
           folder.layers.filter(l => enabled[l.id]).flatMap(layer =>
             layer.marks.map((mark, i) => (
