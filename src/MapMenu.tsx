@@ -11,6 +11,12 @@ import { useNavigate } from 'react-router-dom';
 import { Layer } from 'leaflet';
 import { useMapFolders } from './context/map-folders';
 
+// Copy the color array and getLayerColor function here for sidebar use
+const LAYER_COLORS = [
+  '#1976d2', '#d32f2f', '#388e3c', '#fbc02d', '#7b1fa2', '#f57c00', '#0288d1', '#c2185b', '#455a64', '#afb42b',
+];
+const getLayerColor = (idx: number) => LAYER_COLORS[idx % LAYER_COLORS.length];
+
 interface MapMenuProps {
   folders: Array<{ id: string; name: string; layers: Array<{ id: string; name: string }> }>;
   enabled: Record<string, boolean>;
@@ -103,7 +109,7 @@ const MapMenu: React.FC<MapMenuProps> = ({ folders, enabled, folderEnabled, onTo
       <SimpleTreeView
         sx={{ flexGrow: 1, overflowY: 'auto', mt: 1 }} defaultExpandedItems={folders.map(folder => folder.id)}
       >
-        {folders.map(folder => (
+        {folders.map((folder, folderIdx) => (
           <TreeItem
             key={folder.id}
             itemId={folder.id}
@@ -135,7 +141,7 @@ const MapMenu: React.FC<MapMenuProps> = ({ folders, enabled, folderEnabled, onTo
                   </Box>
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', gap: 1, textAlign: 'left' }}>
+                <Box sx={{ display: 'flex', gap: 1, textAlign: 'left', alignItems: 'center' }}>
                   <Checkbox
                     checked={!!folderEnabled[folder.id]}
                     onChange={() => onToggleFolder(folder.id)}
@@ -143,6 +149,7 @@ const MapMenu: React.FC<MapMenuProps> = ({ folders, enabled, folderEnabled, onTo
                     size="small"
                   />
                   <Typography flexGrow={1} sx={{ fontWeight: 600, color: '#222' }}>{folder.name}</Typography>
+                  <Box sx={{ width: 16, height: 16, bgcolor: getLayerColor(folderIdx), borderRadius: 2, border: '1px solid #bbb', ml: 1 }} />
                   <IconButton size="small" onClick={() => onRemoveFolder(folder.id)} sx={{ ml: 1 }}>
                     <DeleteIcon fontSize="small" sx={{ color: 'grey' }} />
                   </IconButton>
