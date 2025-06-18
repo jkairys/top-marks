@@ -1,46 +1,55 @@
 import React, { useState } from 'react';
-import { useMapLayers } from './context/map-layer';
+import { useMapFolders } from './context/map-folders';
 import MapMenu from './MapMenu';
 import MapDisplay from './MapDisplay';
 
 const MapView: React.FC = () => {
-  const { layers, removeLayer } = useMapLayers();
-  const [enabled, setEnabled] = useState<Record<string, boolean>>(() => {
-    // All layers enabled by default
-    const state: Record<string, boolean> = {};
-    layers.forEach(l => { state[l.id] = true; });
-    return state;
-  });
+  const { folders, removeFolder, removeLayer } = useMapFolders();
+  // State for enabled layers and folders
+  const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [folderEnabled, setFolderEnabled] = useState<Record<string, boolean>>({});
 
-  // Update enabled state if layers change (e.g. new layer added)
+  // Initialize enabled state for folders and layers
   React.useEffect(() => {
+    setFolderEnabled(prev => {
+      const next = { ...prev };
+      folders.forEach(f => { if (!(f.id in next)) next[f.id] = true; });
+      Object.keys(next).forEach(id => { if (!folders.find(f => f.id === id)) delete next[id]; });
+      return next;
+    });
     setEnabled(prev => {
       const next = { ...prev };
-      layers.forEach(l => {
-        if (!(l.id in next)) next[l.id] = true;
-      });
-      // Remove deleted layers
+      folders.forEach(f => f.layers.forEach(l => { if (!(l.id in next)) next[l.id] = true; }));
       Object.keys(next).forEach(id => {
-        if (!layers.find(l => l.id === id)) delete next[id];
+        if (!folders.some(f => f.layers.find(l => l.id === id))) delete next[id];
       });
       return next;
     });
-  }, [layers]);
+  }, [folders]);
 
-  const handleToggle = (id: string) => setEnabled(en => ({ ...en, [id]: !en[id] }));
-  const handleRemove = (id: string) => {
-    setEnabled(en => {
-      const copy = { ...en };
-      delete copy[id];
-      return copy;
-    });
-    removeLayer(id);
+  const handleToggleLayer = (layerId: string) => setEnabled(en => ({ ...en, [layerId]: !en[layerId] }));
+  const handleToggleFolder = (folderId: string) => setFolderEnabled(fen => ({ ...fen, [folderId]: !fen[folderId] }));
+  const handleRemoveLayer = (folderId: string, layerId: string) => {
+    setEnabled(en => { const copy = { ...en }; delete copy[layerId]; return copy; });
+    removeLayer(folderId, layerId);
+  };
+  const handleRemoveFolder = (folderId: string) => {
+    setFolderEnabled(fen => { const copy = { ...fen }; delete copy[folderId]; return copy; });
+    removeFolder(folderId);
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', minHeight: 0, overflow: 'hidden' }}>
-      <MapMenu layers={layers} enabled={enabled} onToggle={handleToggle} onRemove={handleRemove} />
-      <MapDisplay layers={layers} enabled={enabled} />
+      <MapMenu
+        folders={folders}
+        enabled={enabled}
+        folderEnabled={folderEnabled}
+        onToggleLayer={handleToggleLayer}
+        onToggleFolder={handleToggleFolder}
+        onRemoveLayer={handleRemoveLayer}
+        onRemoveFolder={handleRemoveFolder}
+      />
+      <MapDisplay folders={folders} enabled={enabled} folderEnabled={folderEnabled} />
     </div>
   );
 };

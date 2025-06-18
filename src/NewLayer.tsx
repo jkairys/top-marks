@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useMapLayers,  } from "./context/map-layer";
-import type { GpsMark, Layer } from "./context/map-layer";
+import { useMapFolders } from "./context/map-folders";
+import { useMapLayers } from "./context/map-layer";
+import type { GpsMark } from "./context/map-layer";
 import { v4 as uuidv4 } from "uuid";
 import markerIcon from './assets/marker.svg';
 import { useNavigate } from 'react-router-dom';
@@ -42,10 +43,12 @@ function parseGpsLine(line: string): GpsMark | null {
 }
 
 export const NewLayer: React.FC = () => {
-  const { addLayer } = useMapLayers();
+  const { folders, addLayer } = useMapFolders();
+  const {  } = useMapLayers();
   const [input, setInput] = useState("");
   const [parsed, setParsed] = useState<GpsMark[]>([]);
   const [layerName, setLayerName] = useState("");
+  const [selectedFolder, setSelectedFolder] = useState(folders[0]?.id || "");
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -61,8 +64,8 @@ export const NewLayer: React.FC = () => {
   };
 
   const handleAddLayer = () => {
-    if (!layerName || parsed.length === 0) return;
-    addLayer({
+    if (!layerName || parsed.length === 0 || !selectedFolder) return;
+    addLayer(selectedFolder, {
       id: uuidv4(),
       name: layerName,
       marks: parsed,
@@ -77,6 +80,15 @@ export const NewLayer: React.FC = () => {
     <div style={{ display: 'flex', gap: 24 }}>
       <div style={{ flex: 1 }}>
         <h2>Add New Layer</h2>
+        <label style={{ display: 'block', marginBottom: 8 }}>
+          Folder:
+          <select value={selectedFolder} onChange={e => setSelectedFolder(e.target.value)} style={{ marginLeft: 8 }}>
+            <option value="" disabled>Select folder</option>
+            {folders.map(f => (
+              <option key={f.id} value={f.id}>{f.name}</option>
+            ))}
+          </select>
+        </label>
         <input
           type="text"
           placeholder="Layer name"
@@ -90,7 +102,7 @@ export const NewLayer: React.FC = () => {
           onChange={handleInputChange}
           style={{ width: "100%", marginTop: 8 }}
         />
-        <button onClick={handleAddLayer} disabled={!layerName || parsed.length === 0}>Add Layer</button>
+        <button onClick={handleAddLayer} disabled={!layerName || parsed.length === 0 || !selectedFolder}>Add Layer</button>
       </div>
       <div style={{ flex: 1 }}>
         <h3>Parsed Marks</h3>

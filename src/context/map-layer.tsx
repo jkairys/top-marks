@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState } from "react";
+import type { ReactNode } from "react";
 
 export interface GpsMark {
   name: string;
@@ -12,22 +13,32 @@ export interface Layer {
   marks: GpsMark[];
 }
 
-interface MapLayersContextType {
+export interface Folder {
+  id: string;
+  name: string;
   layers: Layer[];
-  addLayer: (layer: Layer) => void;
-  removeLayer: (id: string) => void;
+}
+
+interface MapLayersContextType {
+  folders: Folder[];
+  addFolder: (folder: Folder) => void;
+  removeFolder: (id: string) => void;
+  addLayer: (folderId: string, layer: Layer) => void;
+  removeLayer: (folderId: string, layerId: string) => void;
 }
 
 const MapLayersContext = createContext<MapLayersContextType | undefined>(undefined);
 
 export const MapLayersProvider = ({ children }: { children: ReactNode }) => {
-  const [layers, setLayers] = useState<Layer[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
 
-  const addLayer = (layer: Layer) => setLayers((prev) => [...prev, layer]);
-  const removeLayer = (id: string) => setLayers((prev) => prev.filter(l => l.id !== id));
+  const addFolder = (folder: Folder) => setFolders(prev => [...prev, folder]);
+  const removeFolder = (id: string) => setFolders(prev => prev.filter(f => f.id !== id));
+  const addLayer = (folderId: string, layer: Layer) => setFolders(prev => prev.map(f => f.id === folderId ? { ...f, layers: [...f.layers, layer] } : f));
+  const removeLayer = (folderId: string, layerId: string) => setFolders(prev => prev.map(f => f.id === folderId ? { ...f, layers: f.layers.filter(l => l.id !== layerId) } : f));
 
   return (
-    <MapLayersContext.Provider value={{ layers, addLayer, removeLayer }}>
+    <MapLayersContext.Provider value={{ folders, addFolder, removeFolder, addLayer, removeLayer }}>
       {children}
     </MapLayersContext.Provider>
   );

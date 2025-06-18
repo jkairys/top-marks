@@ -7,15 +7,6 @@ function App() {
   return (
     <Router>
       <div className="app-layout">
-        <aside className="sidebar">
-          <h2>Menu</h2>
-          <nav>
-            <ul>
-              <li><Link to="/map">Map</Link></li>
-              <li><Link to="/new-layer">New Layer</Link></li>
-            </ul>
-          </nav>
-        </aside>
         <main className="main-content">
           <Routes>
             <Route path="/new-layer" element={<NewLayer />} />
