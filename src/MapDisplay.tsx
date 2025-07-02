@@ -58,12 +58,12 @@ const MarkerLabels: React.FC<{ folders: MapDisplayProps['folders']; enabled: Map
               style={{
                 position: 'absolute',
                 fontSize: 10,
-                color: getLayerColor(folderIdx),
+                color: '#fff',
                 fontWeight: 500,
                 whiteSpace: 'nowrap',
                 transform: 'translate(-50%, -100%)',
                 pointerEvents: 'none',
-                textShadow: '0 0 2px #fff',
+                // Removed textShadow for clarity
               }}
             >
               {mark.name}
